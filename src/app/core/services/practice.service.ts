@@ -33,11 +33,12 @@ export class PracticeService {
     });
   }
 
-  generatePaper(topic: string, type: string, count: number): Observable<PaperResponse> {
+  generatePaper(topic: string, type: string, count: number, language?: string): Observable<PaperResponse> {
     return this.http.post<PaperResponse>(`${this.apiUrl}/practice/generate-paper`, {
       topic,
       type,
       count,
+      language,
     });
   }
 

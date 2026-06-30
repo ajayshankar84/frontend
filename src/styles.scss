@@ -139,3 +139,19 @@ input:focus, textarea:focus, select:focus {
   font-size: 13px;
   margin-top: 4px;
 }
+
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+body { top: 0 !important; }
+.goog-te-gadget { color: transparent !important; font-size: 0 !important; }
+.goog-te-gadget .goog-te-combo {
+  color: var(--text) !important;
+  font-size: 13px !important;
+  background: var(--bg-input) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+}
+.goog-te-gadget > span { display: none !important; }
+.goog-te-spinner-pos { display: none !important; }
+.skiptranslate iframe { display: none !important; }
+#goog-gt-tt { display: none !important; }

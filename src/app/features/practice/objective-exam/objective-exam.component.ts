@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PracticeService } from '../../../core/services/practice.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { Question } from '../../../core/models/api.models';
 
 @Component({
@@ -12,30 +13,30 @@ import { Question } from '../../../core/models/api.models';
     <div class="page-container">
       <div class="exam-layout">
         <div class="setup-panel card" *ngIf="!examActive && !examComplete">
-          <h2>Objective Exam</h2>
-          <p class="subtitle">Test your knowledge with multiple choice questions</p>
+          <h2>{{ tx()['objective.title'] }}</h2>
+          <p class="subtitle">{{ tx()['objective.subtitle'] }}</p>
           <div class="form-group">
-            <label>Topic</label>
-            <input type="text" [(ngModel)]="topic" placeholder="e.g., Angular, React, Python">
+            <label>{{ tx()['objective.topic_label'] }}</label>
+            <input type="text" [(ngModel)]="topic" [placeholder]="tx()['objective.topic_placeholder']">
           </div>
           <div class="form-group">
-            <label>Number of Questions</label>
+            <label>{{ tx()['objective.questions_label'] }}</label>
             <select [(ngModel)]="count">
-              <option [value]="10">10 Questions</option>
-              <option [value]="20">20 Questions</option>
-              <option [value]="30">30 Questions</option>
+              <option [value]="10">{{ tx()['objective.questions_10'] }}</option>
+              <option [value]="20">{{ tx()['objective.questions_20'] }}</option>
+              <option [value]="30">{{ tx()['objective.questions_30'] }}</option>
             </select>
           </div>
           <button class="btn btn-primary" (click)="generatePaper()" [disabled]="loading || !topic">
             <span *ngIf="loading" class="spinner"></span>
-            {{ loading ? 'Generating...' : 'Start Exam' }}
+            {{ loading ? tx()['objective.generating'] : tx()['objective.start_exam'] }}
           </button>
         </div>
 
         <div class="exam-panel" *ngIf="examActive">
           <div class="exam-header">
-            <h2>Objective Exam - {{ topic }}</h2>
-            <span class="progress-text">Question {{ currentIndex + 1 }} / {{ questions.length }}</span>
+            <h2>{{ t('objective.header', {topic}) }}</h2>
+            <span class="progress-text">{{ t('objective.progress', {current: currentIndex + 1, total: questions.length}) }}</span>
           </div>
 
           <div class="card question-card">
@@ -58,31 +59,31 @@ import { Question } from '../../../core/models/api.models';
           </div>
 
           <div class="nav-buttons">
-            <button class="btn btn-secondary" (click)="prevQuestion()" [disabled]="currentIndex === 0">Previous</button>
-            <button class="btn btn-primary" *ngIf="currentIndex < questions.length - 1" (click)="nextQuestion()">Next</button>
+            <button class="btn btn-secondary" (click)="prevQuestion()" [disabled]="currentIndex === 0">{{ tx()['objective.previous'] }}</button>
+            <button class="btn btn-primary" *ngIf="currentIndex < questions.length - 1" (click)="nextQuestion()">{{ tx()['objective.next'] }}</button>
             <button class="btn btn-primary" *ngIf="currentIndex === questions.length - 1" (click)="submitExam()" [disabled]="submitting">
-              {{ submitting ? 'Grading...' : 'Submit Exam' }}
+              {{ submitting ? tx()['objective.grading'] : tx()['objective.submit_exam'] }}
             </button>
           </div>
         </div>
 
         <div class="results-panel card" *ngIf="examComplete">
-          <h2>Exam Complete!</h2>
+          <h2>{{ tx()['objective.complete_title'] }}</h2>
           <div class="grade-display">
             <div class="grade-circle">{{ grade }}</div>
-            <p>{{ correctCount }} / {{ questions.length }} correct</p>
-            <p class="score-pct">{{ scorePercentage }}%</p>
+            <p>{{ t('objective.correct_count', {correct: correctCount, total: questions.length}) }}</p>
+            <p class="score-pct">{{ t('objective.score_pct', {score: scorePercentage}) }}</p>
           </div>
           <div class="results-list">
             <div *ngFor="let q of questions; let i = index" class="result-item" [class.correct]="results[i]?.isCorrect" [class.wrong]="!results[i]?.isCorrect">
               <strong>Q{{ i + 1 }}.</strong> {{ q.questionText }}
               <div class="answer-info">
-                <span>Your answer: {{ selectedAnswers[i] || 'Not answered' }}</span>
-                <span *ngIf="!results[i]?.isCorrect">Correct: {{ q.correctAnswer }}</span>
+                <span>{{ t('objective.your_answer', {answer: selectedAnswers[i] || tx()['objective.not_answered']}) }}</span>
+                <span *ngIf="!results[i]?.isCorrect">{{ t('objective.correct_answer', {answer: q.correctAnswer}) }}</span>
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" (click)="resetExam()">Take Another Exam</button>
+          <button class="btn btn-primary" (click)="resetExam()">{{ tx()['objective.take_another'] }}</button>
         </div>
       </div>
     </div>
@@ -130,11 +131,17 @@ export class ObjectiveExamComponent {
   scorePercentage = 0;
   results: any[] = [];
 
-  constructor(private practiceService: PracticeService) {}
+  private practiceService = inject(PracticeService);
+  private translationSvc = inject(TranslationService);
+  readonly tx = this.translationSvc.data;
+
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.translationSvc.t(key, params);
+  }
 
   generatePaper(): void {
     this.loading = true;
-    this.practiceService.generatePaper(this.topic, 'objective', this.count).subscribe({
+    this.practiceService.generatePaper(this.topic, 'objective', this.count, this.translationSvc.currentLang()).subscribe({
       next: (res) => {
         this.questions = res.questions;
         this.paperId = res.paperId;
